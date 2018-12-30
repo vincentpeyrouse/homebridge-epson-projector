@@ -52,15 +52,7 @@ EpsonProjector.prototype = {
     },
 
     setPowerState: function(powerOn, callback) {
-        let command;
-        if (powerOn) {
-            command = "PWR=ON";
-        } else {
-            command = "PWR=OFF";
-        }
-        if (debug) {
-            console.log(error);
-        }
+        let command = "KEY=3B";
         request.get({
             uri: "http://" + this.ip + command_path + command,
             headers: {
@@ -71,7 +63,24 @@ EpsonProjector.prototype = {
             if (debug) {
                 console.log(error);
             }
-            callback();
+            if (powerOn) {
+                // One push is enough
+                callback();
+            } else {
+                // A second push is required
+                request.get({
+                    uri: "http://" + this.ip + command_path + command,
+                    headers: {
+                        "Referer": "http://" + this.ip + "/cgi-bin/webconf",
+                    },
+                    timeout: timeout
+                }, function (error, response, body) {
+                    if (debug) {
+                        console.log(error);
+                    }
+                    callback();
+                });
+            }
         });
     },
 
